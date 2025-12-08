@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>Axios 上传图片</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+<input type="file" id="fileInput" accept="image/*">
+<button onclick="upload()">上传</button>
+
+<pre id="result"></pre>
+
+<script>
+function upload() {
+  const fileInput = document.getElementById("fileInput");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("请选择图片");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  axios.post("/poker-scan", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  }).then(res => {
+    document.getElementById("result").innerText = JSON.stringify(res.data, null, 2);
+  }).catch(err => {
+    console.error(err);
+    alert("上传失败");
+  });
+}
+</script>
+
+</body>
+</html>
