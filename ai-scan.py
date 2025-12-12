@@ -54,22 +54,27 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # 允许的文件扩展名
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+
 # 检查文件是否允许上传
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route("/")
 def index():
     return "Hello, HTTP Server!"
 
+
 @app.route("/check", methods=['GET'])
 def check():
     return "success"
 
+
 @app.route("/demo", methods=['GET'])
 def demo():
     return render_template('index.html')
+
 
 @app.route('/poker-scan', methods=['POST'])
 def poker_scan():
@@ -88,12 +93,13 @@ def poker_scan():
 
     t1 = time.time()
     # YOLO 可以直接传入 PIL Image 或 numpy array
-    results = yoloModel.predict(source=img,data='data.yaml',conf=0.7,device='cpu',save=False,show=False)  # 可调参数
-    print("YOLO耗时:", time.time()-t1)
+    results = yoloModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False, show=False)  # 可调参数
+    print("YOLO耗时:", time.time() - t1)
 
     # 解析结果
     detections = format_detections(results)
-    return jsonify({"data": detections})
+    return jsonify({"code": 1, "data": detections, "msg": "ok"})
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, debug=True, use_reloader=True)
