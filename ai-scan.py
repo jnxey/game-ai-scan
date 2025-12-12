@@ -100,6 +100,9 @@ def poker_scan():
     detections = format_detections(results)
     return jsonify({"code": 1, "data": detections, "msg": "ok"})
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return f"服务器异常: {e}", 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=PORT, debug=True, use_reloader=True)
+    app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
