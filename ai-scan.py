@@ -78,31 +78,36 @@ def demo():
 
 @app.route('/poker-scan', methods=['POST'])
 def poker_scan():
-    if 'file' not in request.files:
-        return jsonify({"error": "没有上传文件"}), 400
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "没有上传文件"}), 400
 
-    file = request.files['file']
+        file = request.files['file']
 
-    if file.filename == '':
-        return jsonify({"error": "未选择文件"}), 400
+        if file.filename == '':
+            return jsonify({"error": "未选择文件"}), 400
 
-    # 将上传的文件读取为 PIL Image
-    img_bytes = file.read()
-    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # 转为 RGB
-    # img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+        # 将上传的文件读取为 PIL Image
+        img_bytes = file.read()
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # 转为 RGB
+        # img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
 
-    t1 = time.time()
-    # YOLO 可以直接传入 PIL Image 或 numpy array
-    results = yoloModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False, show=False)  # 可调参数
-    print("YOLO耗时:", time.time() - t1)
+        t1 = time.time()
+        # YOLO 可以直接传入 PIL Image 或 numpy array
+        results = yoloModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False,
+                                    show=False)  # 可调参数
+        print("YOLO耗时:", time.time() - t1)
 
-    # 解析结果
-    detections = format_detections(results)
-    return jsonify({"code": 1, "data": detections, "msg": "ok"})
+        # 解析结果
+        detections = format_detections(results)
+        return jsonify({"code": 1, "data": detections, "msg": "ok"})
+    except Exception as e:
+        return jsonify({"code": 0, "msg": "推理异常"})
 
 @app.errorhandler(Exception)
 def handle_exception(e):
     return f"服务器异常: {e}", 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
