@@ -10,34 +10,29 @@ from PIL import Image
 import io
 from ultralytics import YOLO
 import time
-from card_matcher import format_detections
+from card_matcher import format_poker_detections, format_majiang_detections
 
 PORT = 9981
 
 APP_NAME = "ai-scan.exe"
 
-yoloModel = YOLO('poker-best8m.pt')
+pokerModel = YOLO('poker-best8m.pt')
+
+majiangModel = YOLO('majiang-best8m.pt')
 
 # =========================
 # 1. 设置开机启动
 # =========================
-# def set_autostart():
-#     if not getattr(sys, 'frozen', False):
-#         print("🧪 当前为 python 运行模式，不设置开机启动")
-#         return
-#     exe = sys.executable
-#     startup = os.path.join(
-#         os.environ["APPDATA"],
-#         r"Microsoft\Windows\Start Menu\Programs\Startup"
-#     )
-#     target = os.path.join(startup, APP_NAME)
-#     if not os.path.exists(target):
-#         shutil.copyfile(exe, target)
-#         print("✅ 已自动加入开机启动")
-#     else:
-#         print("✅ 开机启动已存在")
-#
-# set_autostart()
+def protect():
+    try:
+        print("守护进程...")
+        time.sleep(1)
+        # raise Exception("模拟错误")
+    except Exception as e:
+        print("程序出错:", e)
+        traceback.print_exc()
+        print("重启程序...")
+        time.sleep(1)  # 防止无限快速重启
 
 # =========================
 # 1. 主业务
@@ -75,7 +70,7 @@ def check():
 def demo():
     return render_template('index.html')
 
-
+# 扑克牌扫描
 @app.route('/poker-scan', methods=['POST'])
 def poker_scan():
     try:
@@ -94,12 +89,41 @@ def poker_scan():
 
         t1 = time.time()
         # YOLO 可以直接传入 PIL Image 或 numpy array
-        results = yoloModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False,
+        results = pokerModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False,
                                     show=False)  # 可调参数
         print("YOLO耗时:", time.time() - t1)
 
         # 解析结果
-        detections = format_detections(results)
+        detections = format_poker_detections(results)
+        return jsonify({"code": 1, "data": detections, "msg": "ok"})
+    except Exception as e:
+        return jsonify({"code": 0, "msg": "推理异常"})
+
+# 麻将扫描
+@app.route('/majiang-scan', methods=['POST'])
+def majiang_scan():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "没有上传文件"}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({"error": "未选择文件"}), 400
+
+        # 将上传的文件读取为 PIL Image
+        img_bytes = file.read()
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # 转为 RGB
+        # img = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+
+        t1 = time.time()
+        # YOLO 可以直接传入 PIL Image 或 numpy array
+        results = majiangModel.predict(source=img, data='data.yaml', conf=0.5, device='cpu', save=False,
+                                     show=False)  # 可调参数
+        print("YOLO耗时:", time.time() - t1)
+
+        # 解析结果
+        detections = format_majiang_detections(results)
         return jsonify({"code": 1, "data": detections, "msg": "ok"})
     except Exception as e:
         return jsonify({"code": 0, "msg": "推理异常"})
@@ -111,3 +135,5 @@ def handle_exception(e):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
+    # while True:
+    #     protect()

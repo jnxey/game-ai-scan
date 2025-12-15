@@ -1,10 +1,12 @@
 import math
 from itertools import combinations
 
-class_names = ["10C", "10D", "10H", "10S", "2C", "2D", "2H", "2S", "3C", "3D", "3H", "3S", "4C", "4D", "4H", "4S", "5C",
+poker_class = ["10C", "10D", "10H", "10S", "2C", "2D", "2H", "2S", "3C", "3D", "3H", "3S", "4C", "4D", "4H", "4S", "5C",
                "5D", "5H", "5S", "6C", "6D", "6H", "6S", "7C", "7D", "7H", "7S", "8C", "8D", "8H", "8S", "9C", "9D",
                "9H", "9S", "AC", "AD", "AH", "AS", "JC", "JD", "JH", "JS", "KC", "KD", "KH", "KS", "QC", "QD", "QH",
                "QS"]
+
+majiang_class = ["6D","6B","8B","9B","7B","4C","5D","2F","4D","3D","5B","7D","3C","2C","1C","8D","4B","9D","1D","EW","2B","1B","3B","4S","2S","3F","1S","3S","1F","4F","NW","SW","RD","WW","WD","8C","6C","2D","5C","GD","7C","9C"]
 
 
 def yolo_to_corner(det):
@@ -47,7 +49,7 @@ def belong_to_same_card(c1, c2):
 
 
 # detections: 格式化数据
-def format_detections(results):
+def format_poker_detections(results):
     singles = []
     pairs = []
     for r in results:
@@ -59,7 +61,7 @@ def format_detections(results):
             cBox = {
                 "box": yolo_to_corner(b),
                 "score": s,
-                "class_name": class_names[int(c)]
+                "class_name": poker_class[int(c)]
             }
             for sBox in singles:
                 if sBox["class_name"] == cBox["class_name"]:
@@ -75,3 +77,17 @@ def format_detections(results):
             if not matched:
                 singles.append(cBox)
     return pairs
+
+def format_majiang_detections(results):
+    detections = []
+    for r in results:
+        boxes = r.boxes.xyxy.tolist()  # [[x1, y1, x2, y2], ...]
+        scores = r.boxes.conf.tolist()  # 置信度
+        classes = r.boxes.cls.tolist()  # 类别索引
+        for b, s, c in zip(boxes, scores, classes):
+            detections.append({
+                "bbox": [yolo_to_corner(b)],
+                "score": s,
+                "class_name": majiang_class[int(c)]
+            })
+    return detections
