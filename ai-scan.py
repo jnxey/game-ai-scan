@@ -21,20 +21,6 @@ pokerModel = YOLO('poker-best8m.pt')
 majiangModel = YOLO('majiang-best8m.pt')
 
 # =========================
-# 1. 设置开机启动
-# =========================
-def protect():
-    try:
-        print("守护进程...")
-        time.sleep(1)
-        # raise Exception("模拟错误")
-    except Exception as e:
-        print("程序出错:", e)
-        traceback.print_exc()
-        print("重启程序...")
-        time.sleep(1)  # 防止无限快速重启
-
-# =========================
 # 1. 主业务
 # =========================
 
@@ -70,6 +56,7 @@ def check():
 def demo():
     return render_template('index.html')
 
+
 # 扑克牌扫描
 @app.route('/poker-scan', methods=['POST'])
 def poker_scan():
@@ -89,8 +76,7 @@ def poker_scan():
 
         t1 = time.time()
         # YOLO 可以直接传入 PIL Image 或 numpy array
-        results = pokerModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False,
-                                    show=False)  # 可调参数
+        results = pokerModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False, show=False)  # 可调参数
         print("YOLO耗时:", time.time() - t1)
 
         # 解析结果
@@ -98,6 +84,7 @@ def poker_scan():
         return jsonify({"code": 1, "data": detections, "msg": "ok"})
     except Exception as e:
         return jsonify({"code": 0, "msg": "推理异常"})
+
 
 # 麻将扫描
 @app.route('/majiang-scan', methods=['POST'])
@@ -118,8 +105,7 @@ def majiang_scan():
 
         t1 = time.time()
         # YOLO 可以直接传入 PIL Image 或 numpy array
-        results = majiangModel.predict(source=img, data='data.yaml', conf=0.5, device='cpu', save=False,
-                                     show=False)  # 可调参数
+        results = majiangModel.predict(source=img, data='data.yaml', conf=0.5, device='cpu', save=False, show=False)  # 可调参数
         print("YOLO耗时:", time.time() - t1)
 
         # 解析结果
@@ -128,6 +114,7 @@ def majiang_scan():
     except Exception as e:
         return jsonify({"code": 0, "msg": "推理异常"})
 
+
 @app.errorhandler(Exception)
 def handle_exception(e):
     return f"服务器异常: {e}", 500
@@ -135,5 +122,3 @@ def handle_exception(e):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
-    # while True:
-    #     protect()
