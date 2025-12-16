@@ -6,7 +6,11 @@ poker_class = ["10C", "10D", "10H", "10S", "2C", "2D", "2H", "2S", "3C", "3D", "
                "9H", "9S", "AC", "AD", "AH", "AS", "JC", "JD", "JH", "JS", "KC", "KD", "KH", "KS", "QC", "QD", "QH",
                "QS"]
 
-majiang_class = ["6D","6B","8B","9B","7B","4C","5D","2F","4D","3D","5B","7D","3C","2C","1C","8D","4B","9D","1D","EW","2B","1B","3B","4S","2S","3F","1S","3S","1F","4F","NW","SW","RD","WW","WD","8C","6C","2D","5C","GD","7C","9C"]
+majiang_class = ['circle_9', 'bamboo_2', 'bamboo_3', 'bamboo_4', 'bamboo_5', 'bamboo_6', 'bamboo_8', 'bamboo_9',
+                 'circle_8', 'circle_7', 'circle_4', 'circle_2', 'circle_1', 'circle_3', 'circle_5', 'bamboo_7',
+                 'circle_6', 'bamboo_1', 'character_9', 'character_8', 'character_7', 'character_6', 'character_5',
+                 'character_3', 'character_2', 'character_4', 'green', 'red', 'north', 'east', 'character_1', 'white',
+                 'west', 'south']
 
 
 def yolo_to_corner(det):
@@ -77,6 +81,7 @@ def format_poker_detections(results):
             if not matched:
                 singles.append(cBox)
     return pairs
+
 
 def format_majiang_detections(results):
     detections = []
