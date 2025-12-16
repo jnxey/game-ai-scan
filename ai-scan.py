@@ -8,6 +8,7 @@ from card_matcher import format_poker_detections, format_majiang_detections
 import requests
 import asyncio
 import httpx
+import torch
 
 PORT = 9981
 
@@ -16,6 +17,10 @@ app = FastAPI()
 pokerModel = YOLO('poker-best8m.pt')
 
 majiangModel = YOLO('majiang-best8m.pt')
+
+# 热身推理一次，丢一张小图
+pokerModel("prerun.png", imgsz=416)
+majiangModel("prerun.png", imgsz=416)
 
 @app.get("/check")
 def check():
