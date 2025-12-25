@@ -62,7 +62,7 @@ def recognize_chip(img, step=15):
     if img is None:
         raise ValueError("图片读取失败")
     for angle in range(0, 181, step):
-        print(f"-------------角度{angle}-----------------")
+        # print(f"-------------角度{angle}-----------------")
         rotated = rotate_image(img, -angle)
         denom, code = find_value_and_code(rotated)
         if denom and code:
