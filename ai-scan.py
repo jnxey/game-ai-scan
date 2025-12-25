@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from PIL import Image
 import uvicorn
@@ -15,6 +16,10 @@ import torch
 PORT = 9981
 
 app = FastAPI()
+
+# 配置 CORS
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],
+                   allow_headers=["*"], )
 
 pokerModel = YOLO('poker-best8m.pt')
 
