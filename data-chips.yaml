@@ -1,0 +1,6 @@
+path: D:/Work/yolo-poker/chips-angle
+train: images/train
+val: images/val
+names:
+  0: chip-small
+  1: chip-big

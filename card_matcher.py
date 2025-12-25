@@ -12,6 +12,8 @@ majiang_class = ['circle_9', 'bamboo_2', 'bamboo_3', 'bamboo_4', 'bamboo_5', 'ba
                  'character_3', 'character_2', 'character_4', 'green', 'red', 'north', 'east', 'character_1', 'white',
                  'west', 'south']
 
+chip_class = ['chip_small', 'chip_big']
+
 
 def yolo_to_corner(det):
     x1, y1, x2, y2 = det[:4]
@@ -94,5 +96,19 @@ def format_majiang_detections(results):
                 "bbox": [yolo_to_corner(b)],
                 "score": s,
                 "class_name": majiang_class[int(c)]
+            })
+    return detections
+
+def format_chip_detections(results):
+    detections = []
+    for r in results:
+        boxes = r.boxes.xyxy.tolist()  # [[x1, y1, x2, y2], ...]
+        scores = r.boxes.conf.tolist()  # 置信度
+        classes = r.boxes.cls.tolist()  # 类别索引
+        for b, s, c in zip(boxes, scores, classes):
+            detections.append({
+                "bbox": yolo_to_corner(b),
+                "score": s,
+                "class_name": chip_class[int(c)]
             })
     return detections
