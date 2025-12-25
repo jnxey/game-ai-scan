@@ -45,7 +45,7 @@ async def poker_scan(file: UploadFile = File(...)):
         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # 转为 RGB
         t1 = time.time()
         # YOLO 可以直接传入 PIL Image 或 numpy array
-        results = pokerModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False, show=False)  # 可调参数
+        results = pokerModel.predict(source=img, data='data.yaml', conf=0.7, device=0, save=False, show=False)  # 可调参数
         print("YOLO耗时:", time.time() - t1)
         # 解析结果
         detections = format_poker_detections(results)
@@ -62,7 +62,7 @@ async def poker_scan(file: UploadFile = File(...)):
         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")  # 转为 RGB
         t1 = time.time()
         # YOLO 可以直接传入 PIL Image 或 numpy array
-        results = majiangModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False, show=False)  # 可调参数
+        results = majiangModel.predict(source=img, data='data.yaml', conf=0.7, device=0, save=False, show=False)  # 可调参数
         print("YOLO耗时:", time.time() - t1)
         # 解析结果
         detections = format_majiang_detections(results)
@@ -80,7 +80,7 @@ async def chip_scan(file: UploadFile = File(...)):
 
         t1 = time.time()
         # YOLO 可以直接传入 PIL Image 或 numpy array
-        results = chipModel.predict(source=img, data='data.yaml', conf=0.7, device='cpu', save=False, show=False)  # 可调参数
+        results = chipModel.predict(source=img, data='data.yaml', conf=0.7, device=0, save=False, show=False)  # 可调参数
         t2 = time.time()
         print("YOLO耗时:", t2 - t1)
         # 解析结果
