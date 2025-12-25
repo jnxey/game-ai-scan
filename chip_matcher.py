@@ -5,7 +5,7 @@ import re
 from PIL import Image
 
 # 初始化 OCR（建议全局只初始化一次）
-reader = easyocr.Reader(['en'], gpu=False, verbose=False)
+reader = easyocr.Reader(['en'], gpu=True, verbose=False)
 
 # 合法面值（按你的筹码调整）
 DENOMS = {'1', '5', '10', '25', '50', '100', '200', '500', '1000', '2000', '5000', '10000', '20000', '50000', '100000',
@@ -99,7 +99,9 @@ def crop_with_padding(img, x1, y1, x2, y2, pad_ratio=0.15):
     nx2 = min(w, int(x2) + pad_w)
     ny2 = min(h, int(y2) + pad_h)
 
-    return img[ny1:ny2, nx1:nx2]
+    roi = img[ny1:ny2, nx1:nx2]
+    roi = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)  # 避免 EasyOCR 内部转换
+    return roi
 
 # 处理筹码图片
 def process_image(img, bbox):
