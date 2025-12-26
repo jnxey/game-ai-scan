@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from PIL import Image
@@ -32,15 +32,18 @@ pokerModel("prerun.png", imgsz=416)
 majiangModel("prerun.png", imgsz=416)
 chipModel("prerun.png", imgsz=416)
 
+
 @app.get("/check")
 def check():
     return {"status": "success"}
+
 
 @app.get("/demo", response_class=HTMLResponse)
 async def read_root():
     with open("templates/index.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
+
 
 @app.post("/poker-scan")
 async def poker_scan(file: UploadFile = File(...)):
@@ -76,8 +79,9 @@ async def poker_scan(file: UploadFile = File(...)):
         print(e)
         return {"code": 0, "msg": "推理异常"}
 
+
 @app.post("/chip-scan")
-async def chip_scan(file: UploadFile = File(...)):
+async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
     try:
         # 读取图片字节
         img_bytes = await file.read()
@@ -90,13 +94,15 @@ async def chip_scan(file: UploadFile = File(...)):
         print("YOLO耗时:", t2 - t1)
         # 解析结果
         detections = format_chip_detections(results)
-        for det in detections:
-            chip_img = process_image(ensure_cv2_image(img), det['bbox'])
-            view = recognize_chip(chip_img)
-            det['view'] = view
+        if scan_text == 'yes':
+            for det in detections:
+                chip_img = process_image(ensure_cv2_image(img), det['bbox'])
+                view = recognize_chip(chip_img)
+                det['view'] = view
         t3 = time.time()
         print("OCR耗时:", t3 - t2)
         return {"code": 1, "data": detections, "msg": "ok"}
+
     except Exception as e:
         print(e)
         return {"code": 0, "msg": "推理异常"}
