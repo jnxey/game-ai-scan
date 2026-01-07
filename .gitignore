@@ -3,5 +3,8 @@ build
 dist
 installer/output
 installer/*.exe
+installer/*.yaml
+installer/*.pt
+installer/*.png
 ai-scan.log
 ai-scan.spec
