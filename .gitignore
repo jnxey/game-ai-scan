@@ -1,5 +1,7 @@
 .idea
 build
 dist
+installer/output
+installer/*.exe
 ai-scan.log
 ai-scan.spec
