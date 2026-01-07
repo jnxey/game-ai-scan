@@ -110,7 +110,7 @@ async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
 
 if __name__ == "__main__":
     uvicorn.run(
-        "ai-scan:app",  # 等价于命令行 main:app
+        app,
         host="0.0.0.0",
         port=PORT,
         workers=1,  # Windows 必须 = 1
