@@ -2,6 +2,7 @@
 build
 dist
 installer/output
+installer/templates
 installer/*.exe
 installer/*.yaml
 installer/*.pt
