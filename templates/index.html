@@ -25,7 +25,7 @@ function upload() {
   const formData = new FormData();
   formData.append("file", file);
 
-  axios.post("/chip-scan", formData, {
+  axios.post("/poker-scan", formData, {
     headers: {
       "Content-Type": "multipart/form-data"
     }
