@@ -3,6 +3,7 @@ import numpy as np
 import zxing
 import tempfile
 import os
+import time
 # python3 -m venv venv
 # source venv/bin/activate
 
@@ -78,6 +79,7 @@ def warp_barcode(img, contour):
 # -----------------------------
 # 主流程
 # -----------------------------
+t1 = time.time()
 img = cv2.imread("barcode2.png")
 
 cnt = locate_barcode_contour(img)
@@ -94,6 +96,10 @@ with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
 
 reader = zxing.BarCodeReader()
 result = reader.decode(path)
+
+t2 = time.time()
+
+print("解析耗时:", t2 - t1)
 
 # 打印识别结果
 if result and result.parsed:
