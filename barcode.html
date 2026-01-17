@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图片条形码识别</title>
+</head>
+<body>
+
+<h2>上传图片识别条形码（Quagga）</h2>
+<input type="file" accept="image/*" id="fileInput">
+<p id="result"></p>
+
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+
+<script>
+  document.getElementById("fileInput").addEventListener("change", e => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      Quagga.decodeSingle({
+        src: reader.result,
+        numOfWorkers: 0,
+        inputStream: { size: 800 },
+        decoder: {
+          readers: [
+            "ean_reader",
+            "code_128_reader",
+            "code_39_reader",
+            "upc_reader"
+          ]
+        }
+      }, result => {
+        if (result && result.codeResult) {
+          document.getElementById("result").innerText =
+            "识别成功：" + result.codeResult.code
+        } else {
+          document.getElementById("result").innerText =
+            "未识别到条形码"
+        }
+      })
+    }
+    reader.readAsDataURL(file)
+  })
+</script>
+
+</body>
+</html>
