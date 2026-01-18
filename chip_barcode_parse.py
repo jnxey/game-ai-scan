@@ -4,7 +4,7 @@ import zxing
 import tempfile
 import os
 import time
-# python3 -m venv venv
+# python -m venv venv
 # source venv/bin/activate
 
 def locate_barcode_contour(img):

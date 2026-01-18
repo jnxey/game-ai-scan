@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-# python3 -m venv venv
+# python -m venv venv
 # source venv/bin/activate
 
 def locate_barcode_contour(img):
