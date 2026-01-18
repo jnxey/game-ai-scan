@@ -2,18 +2,16 @@ import cv2
 import numpy as np
 import math
 
-def crop_text_roi_from_finder(img):
+def crop_text_no_finder(img):
     """
-    自动通过左右 Finder Pattern 定位文字区域并裁切旋转矩形
-    返回：
-        cropped_img - 裁切后的旋转矩形区域
-        angle       - 原文字旋转角度（顺时针）
+    自动裁切文字区域（不含定位框），稳定处理任意角度
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     contours, hierarchy = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     hierarchy = hierarchy[0]
 
+    # 找左右定位框（外环+内环）
     finders = []
     for i, c in enumerate(contours):
         x, y, w, h = cv2.boundingRect(c)
@@ -29,7 +27,6 @@ def crop_text_roi_from_finder(img):
         if abs(cx0 - cx2) > w*0.1 or abs(cy0 - cy2) > h*0.1:
             continue
         finders.append({
-            "outer": (x, y, w, h),
             "inner": (x2, y2, w2, h2),
             "center": (cx0, cy0)
         })
@@ -37,42 +34,42 @@ def crop_text_roi_from_finder(img):
     if len(finders) < 2:
         raise RuntimeError("未检测到足够 Finder Pattern")
 
-    # 左右 Finder
-    finders = sorted(finders, key=lambda f: f["center"][0])
-    left, right = finders[0], finders[-1]
+    left, right = sorted(finders, key=lambda f: f["center"][0])
 
-    # 旋转角度
+    # 文字旋转角度
     lx, ly = left["center"]
     rx, ry = right["center"]
     angle = math.degrees(math.atan2(ry - ly, rx - lx))
 
-    # 矩形中心与大小
-    cx = (lx + rx) / 2
-    cy = (ly + ry) / 2
-    width = math.hypot(rx - lx, ry - ly)
-    height = max(left["inner"][3], right["inner"][3]) * 2
-    pad = int(max(left["inner"][3], right["inner"][3]) * 0.3)
-    height += pad*2
-
-    rect = ((cx, cy), (width, height), angle)
-
     # -----------------------------
-    # 旋转裁切
+    # 旋转整张图，使文字水平
     # -----------------------------
-    center, size, angle = rect
-    center = tuple(map(int, center))
-    size = tuple(map(int, size))
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    cx = (lx + rx)/2
+    cy = (ly + ry)/2
+    M = cv2.getRotationMatrix2D((cx, cy), angle, 1.0)
     rotated = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
-    x, y = int(center[0] - size[0]/2), int(center[1] - size[1]/2)
-    cropped = rotated[y:y+size[1], x:x+size[0]].copy()
 
-    return cropped, angle
+    # -----------------------------
+    # 在水平图里裁切文字
+    # -----------------------------
+    # 左右边界：用内框中心 ± 内框宽/2
+    x1 = int(left["center"][0] - left["inner"][2]/2)
+    x2 = int(right["center"][0] + right["inner"][2]/2)
 
-img = cv2.imread("ocr_mark3.png")
-roi, angle = crop_text_roi_from_finder(img)
+    # 上下边界：用内框高度 * 1.5
+    h = max(left["inner"][3], right["inner"][3])
+    y1 = int(cy - h * 0.75)
+    y2 = int(cy + h * 0.75)
 
-print("文字旋转角度：", angle)
-cv2.imshow("Cropped ROI", roi)
+    cropped_text = rotated[y1:y2, x1:x2].copy()
+
+    return cropped_text, 0  # 已经水平，角度返回0
+
+
+img = cv2.imread("ocr_mark2.png")
+roi, angle = crop_text_no_finder(img)
+
+print("文字旋转角度已水平：", angle)
+cv2.imshow("Cropped Text Only", roi)
 cv2.waitKey(5000)
 cv2.destroyAllWindows()
