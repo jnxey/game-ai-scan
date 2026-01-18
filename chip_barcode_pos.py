@@ -86,5 +86,5 @@ warped = warp_barcode(img, cnt)
 
 cv2.imshow("Original", img)
 cv2.imshow("Warped Barcode", warped)
-cv2.waitKey(0)
+cv2.waitKey(5000)  # 自动显示 5 秒
 cv2.destroyAllWindows()
