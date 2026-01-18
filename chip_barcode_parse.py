@@ -89,6 +89,8 @@ if cnt is None:
 
 warped = warp_barcode(img, cnt)
 
+t2 = time.time()
+
 # 把图像临时写成文件供 ZXing 处理
 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
     path = tmp.name
@@ -97,9 +99,10 @@ with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
 reader = zxing.BarCodeReader()
 result = reader.decode(path)
 
-t2 = time.time()
+t3 = time.time()
 
-print("解析耗时:", t2 - t1)
+print("定位耗时:", t2 - t1)
+print("解析耗时:", t3 - t2)
 
 # 打印识别结果
 if result and result.parsed:
