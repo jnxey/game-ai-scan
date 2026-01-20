@@ -150,6 +150,7 @@ def crop_text_no_finder_debug(img):
     x1 = int(left["center"][0] - left["inner"][2] / 2)
     x2 = int(right["center"][0] + right["inner"][2] / 2)
 
+    # 上下边界：用内框高度 * 1.5
     h = max(left["inner"][3], right["inner"][3])
     y1 = int(cy - h * 0.75)
     y2 = int(cy + h * 0.75)
