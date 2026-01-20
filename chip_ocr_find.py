@@ -59,6 +59,8 @@ def crop_text_no_finder_debug(img):
     # =============================
     finders = []
     candidate_img = img.copy()
+    min_area = 60  # 最小面积阈值
+    max_area = 140 # 最大面积阈值
 
     for i, c in enumerate(contours):
         x, y, w, h = cv2.boundingRect(c)
@@ -122,6 +124,16 @@ def crop_text_no_finder_debug(img):
     angle = math.degrees(math.atan2(ry - ly, rx - lx))
     print("检测到旋转角度:", angle)
 
+    # =============================
+    # 判断是否需要旋转 180°
+    # =============================
+    img_height = gray.shape[0]  # 图片高度
+    # 如果左右中心点平均 y 值偏上半部分，则旋转 180°
+    center_y_mean = (ly + ry) / 2
+    if center_y_mean < img_height / 2:
+        angle = (angle + 180) % 360
+        print("上下翻转，旋转 180° 后角度:", angle)
+
     cx = (lx + rx) / 2
     cy = (ly + ry) / 2
     M = cv2.getRotationMatrix2D((cx, cy), angle, 1.0)
@@ -144,7 +156,7 @@ def crop_text_no_finder_debug(img):
 
     return cropped_text, 0
 
-img = cv2.imread("ocr_mark4.png")
+img = cv2.imread("ocr_mark6.png")
 roi, angle = crop_text_no_finder_debug(img)
 
 print("文字旋转角度已水平：", angle)
