@@ -66,7 +66,7 @@ def crop_text_no_finder(img):
     return cropped_text, 0  # 已经水平，角度返回0
 
 
-img = cv2.imread("ocr_mark2.png")
+img = cv2.imread("ocr_mark5.png")
 roi, angle = crop_text_no_finder(img)
 
 print("文字旋转角度已水平：", angle)
