@@ -153,15 +153,15 @@ def crop_text_no_finder_debug(img):
 
     # 上下边界：用内框高度 * 1.5
     h = max(left["inner"][3], right["inner"][3])
-    y1 = int(cy - h * 1.2)
-    y2 = int(cy + h * 1.2)
+    y1 = int(cy - h - padding_size)
+    y2 = int(cy + h + padding_size)
 
     cropped_text = rotated[y1:y2, x1:x2].copy()
     show("07_cropped_text", cropped_text)
 
     return cropped_text, 0
 
-img = cv2.imread("ocr_mark7.png")
+img = cv2.imread("ocr_mark6.png")
 roi, angle = crop_text_no_finder_debug(img)
 
 print("文字旋转角度已水平：", angle)
