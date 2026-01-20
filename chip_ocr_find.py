@@ -117,7 +117,10 @@ def crop_text_no_finder_debug(img):
     # =============================
     # 6. 旋转校正
     # =============================
-    left, right = sorted(finders, key=lambda f: f["center"][0])
+    finders_sorted = sorted(finders, key=lambda f: f["center"][0])
+    # 取最左和最右
+    left = finders_sorted[0]
+    right = finders_sorted[-1]
     lx, ly = left["center"]
     rx, ry = right["center"]
 
@@ -156,7 +159,7 @@ def crop_text_no_finder_debug(img):
 
     return cropped_text, 0
 
-img = cv2.imread("ocr_mark6.png")
+img = cv2.imread("ocr_mark3.png")
 roi, angle = crop_text_no_finder_debug(img)
 
 print("文字旋转角度已水平：", angle)
