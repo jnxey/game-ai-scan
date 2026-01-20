@@ -147,20 +147,21 @@ def crop_text_no_finder_debug(img):
     # =============================
     # 7. 裁剪文字区域
     # =============================
-    x1 = int(left["center"][0] - left["inner"][2] / 2)
-    x2 = int(right["center"][0] + right["inner"][2] / 2)
+    padding_size = 10
+    x1 = int(left["center"][0] - padding_size)
+    x2 = int(right["center"][0] + padding_size)
 
     # 上下边界：用内框高度 * 1.5
     h = max(left["inner"][3], right["inner"][3])
-    y1 = int(cy - h * 0.75)
-    y2 = int(cy + h * 0.75)
+    y1 = int(cy - h * 1.2)
+    y2 = int(cy + h * 1.2)
 
     cropped_text = rotated[y1:y2, x1:x2].copy()
     show("07_cropped_text", cropped_text)
 
     return cropped_text, 0
 
-img = cv2.imread("ocr_mark3.png")
+img = cv2.imread("ocr_mark7.png")
 roi, angle = crop_text_no_finder_debug(img)
 
 print("文字旋转角度已水平：", angle)
