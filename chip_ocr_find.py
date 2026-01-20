@@ -59,8 +59,6 @@ def crop_text_no_finder_debug(img):
     # =============================
     finders = []
     candidate_img = img.copy()
-    min_area = 60  # 最小面积阈值
-    max_area = 140 # 最大面积阈值
 
     for i, c in enumerate(contours):
         x, y, w, h = cv2.boundingRect(c)
