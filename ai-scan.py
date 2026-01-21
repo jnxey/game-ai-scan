@@ -7,13 +7,14 @@ from ultralytics import YOLO
 import time
 import io
 from card_matcher import format_poker_detections, format_majiang_detections, format_chip_detections
-from chip_matcher import process_image, recognize_chip, ensure_cv2_image
+from chip_matcher import process_image, recognize_chip
 from chip_ocr_text import detect_and_crop
-from chip_ocr_easy import easyocr_digits_only, preprocess_for_ocr
+from chip_ocr_easy import easyocr_digits_only, preprocess_for_ocr, process_chip_image
 import requests
 import asyncio
 import httpx
 import torch
+import cv2
 
 PORT = 9981
 
@@ -99,8 +100,9 @@ async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
         detections = format_chip_detections(results)
         if scan_text == 'yes':
             for det in detections:
-                chip_img = process_image(ensure_cv2_image(img), det['bbox'])
-                # view = recognize_chip(chip_img)
+                chip_img = process_chip_image(img, det['bbox'], pad_ratio_w=0.1, pad_ratio_h=0.1, pad_bottom=False)
+                # cv2.imshow('chip_img', chip_img)
+                # cv2.waitKey(0)
                 roi, angle = detect_and_crop(chip_img)
                 if roi is None or roi.size == 0:
                     print("⚠️ ROI 为空，无法进行 OCR")
