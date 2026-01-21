@@ -13,7 +13,7 @@ def dbg(name, img, wait=0):
 # =========================
 # 统一宽度
 # =========================
-def resize_to_width(img, target_w=640):
+def resize_to_width(img, target_w):
     h, w = img.shape[:2]
     scale = target_w / w
     new_h = int(h * scale)
@@ -44,14 +44,17 @@ def find_text_blocks(bin_img, box_max_size):
     candidates = []
     for c in contours:
         x, y, w, h = cv2.boundingRect(c)
-        if 10 <= w <= box_max_size and 10 <= h <= box_max_size:
+        min_size = box_max_size * 0.2
+        if(w <= box_max_size * 0.6 and h <= box_max_size * 0.6):
+            continue
+        if min_size <= w <= box_max_size and min_size <= h <= box_max_size:
             candidates.append((x, y, w, h))
     return candidates
 
 # =========================
 # RANSAC 找连续直线点（纯 numpy）
 # =========================
-def ransac_linear_cluster_numpy(img, centers, min_count=5, line_tol_px=5, max_trials=500):
+def ransac_linear_cluster_numpy(img, centers, box_max_size, min_count, line_tol_px, max_trials):
     centers = np.array(centers, dtype=np.float32)
     n = len(centers)
     if n < min_count:
@@ -83,7 +86,7 @@ def ransac_linear_cluster_numpy(img, centers, min_count=5, line_tol_px=5, max_tr
     if len(best_group) < min_count:
         return None
 
-    group_filtered = filter_points_by_distance(best_group)
+    group_filtered = find_compact_x_cluster(best_group, box_max_size * 2.5)
 
     # debug 可视化
     dbg_img = img.copy()
@@ -100,18 +103,45 @@ def ransac_linear_cluster_numpy(img, centers, min_count=5, line_tol_px=5, max_tr
 # =========================
 # 筛选相邻点距离
 # =========================
-def filter_points_by_distance(points, min_dist=45, max_dist=135):
-    if len(points) < 2:
-        return points
-    filtered = [points[0]]
-    for pt in points[1:]:
-        last = filtered[-1]
-        dist = np.linalg.norm(pt - last)
-        if min_dist <= dist <= max_dist:
-            filtered.append(pt)
-        elif dist > max_dist:
-            break
-    return np.array(filtered)
+def find_compact_x_cluster(points, max_gap, min_count=2):
+    """
+    points: Nx2 (只用 x)
+    max_gap: 允许的最大相邻 x 距离
+    min_count: 至少多少个点才算有效
+    """
+    if len(points) < min_count:
+        return None
+
+    pts = np.array(points, dtype=np.float32)
+
+    # 1️⃣ 按 x 排序
+    order = np.argsort(pts[:, 0])
+    pts = pts[order]
+
+    best_cluster = []
+    curr_cluster = [pts[0]]
+
+    for i in range(1, len(pts)):
+        dx = pts[i][0] - pts[i - 1][0]
+
+        if dx <= max_gap:
+            curr_cluster.append(pts[i])
+        else:
+            # 断开，比较
+            if len(curr_cluster) > len(best_cluster):
+                best_cluster = curr_cluster.copy()
+            curr_cluster = [pts[i]]
+
+    # 最后一段
+    if len(curr_cluster) > len(best_cluster):
+        best_cluster = curr_cluster.copy()
+
+    if len(best_cluster) < min_count:
+        return None
+
+    return np.array(best_cluster)
+
+
 
 # =========================
 # 旋转裁切 ROI
@@ -180,7 +210,7 @@ def detect_and_crop(img, box_max_size=40):
     dbg("blocks", dbg_img)
 
     centers = [(x+w/2, y+h/2) for x,y,w,h in blocks]
-    group = ransac_linear_cluster_numpy(img, centers)
+    group = ransac_linear_cluster_numpy(img, centers, box_max_size, min_count=5, line_tol_px=4, max_trials=500)
     if group is None:
         raise RuntimeError("未检测到连续字符集合")
     roi, angle = rotate_and_crop_roi(img, group, box_max_size)
