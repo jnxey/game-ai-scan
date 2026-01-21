@@ -51,7 +51,7 @@ def find_text_blocks(bin_img):
 # =========================
 # RANSAC 找连续直线点（纯 numpy）
 # =========================
-def ransac_linear_cluster_numpy(img, centers, min_count=5, max_count=16, line_tol_px=5, max_trials=500):
+def ransac_linear_cluster_numpy(img, centers, min_count=5, line_tol_px=5, max_trials=500):
     centers = np.array(centers, dtype=np.float32)
     n = len(centers)
     if n < min_count:
@@ -78,24 +78,24 @@ def ransac_linear_cluster_numpy(img, centers, min_count=5, max_count=16, line_to
 
         if len(inliers) >= min_count and len(inliers) > len(best_group):
             inliers = inliers[np.argsort(inliers[:,0])]
-            if len(inliers) > max_count:
-                inliers = inliers[:max_count]
             best_group = inliers
 
     if len(best_group) < min_count:
         return None
 
+    group_filtered = filter_points_by_distance(best_group)
+
     # debug 可视化
     dbg_img = img.copy()
     for pt in centers:
         cv2.circle(dbg_img, (int(pt[0]), int(pt[1])), 3, (0,255,0), -1)
-    for pt in best_group:
+    for pt in group_filtered:
         cv2.circle(dbg_img, (int(pt[0]), int(pt[1])), 5, (0,0,255), -1)
-    if len(best_group) >= 2:
-        cv2.line(dbg_img, tuple(best_group[0].astype(int)), tuple(best_group[-1].astype(int)), (255,0,0), 1)
+    if len(group_filtered) >= 2:
+        cv2.line(dbg_img, tuple(group_filtered[0].astype(int)), tuple(group_filtered[-1].astype(int)), (255,0,0), 1)
     dbg("ransac_cluster", dbg_img)
 
-    return best_group
+    return group_filtered
 
 # =========================
 # 筛选相邻点距离
@@ -154,12 +154,11 @@ def detect_and_crop(img):
     dbg("blocks", dbg_img)
 
     centers = [(x+w/2, y+h/2) for x,y,w,h in blocks]
-    group = ransac_linear_cluster_numpy(img, centers, min_count=5, max_count=8, line_tol_px=5)
+    group = ransac_linear_cluster_numpy(img, centers)
     if group is None:
         raise RuntimeError("未检测到连续字符集合")
 
-    group_filtered = filter_points_by_distance(group, min_dist=45, max_dist=135)
-    roi, angle = rotate_and_crop_roi(img, group_filtered)
+    roi, angle = rotate_and_crop_roi(img, group)
     return roi, angle
 
 # =========================
