@@ -146,54 +146,89 @@ def find_compact_x_cluster(points, max_gap, min_count=2):
 # =========================
 # 旋转裁切 ROI
 # =========================
-def rotate_and_crop_roi(img, points, box_max_size):
-    if len(points) < 2:
+def rotate_and_crop_roi_stable(
+    img,
+    points,
+    box_max_size,
+    pad_x_ratio=1.5,
+    pad_y_ratio=1.2,
+    border_mode=cv2.BORDER_REPLICATE
+):
+    """
+    稳定版：旋转 + 点同步 + ROI 裁剪
+
+    points: Nx2，字符中心点（同 img 坐标系）
+    box_max_size: 文字高度尺度
+    pad_x_ratio: x 方向扩展比例
+    pad_y_ratio: y 方向扩展比例
+    """
+
+    if points is None or len(points) < 2:
         return None, 0
 
-    # =========================
-    # 1. 计算中心 & 角度
-    # =========================
-    cx = np.mean(points[:, 0])
-    cy = np.mean(points[:, 1])
+    points = np.asarray(points, dtype=np.float32)
 
+    # =========================
+    # 1. 文字中心 & 角度
+    # =========================
+    center = points.mean(axis=0)
     dx, dy = points[-1] - points[0]
     angle = math.degrees(math.atan2(dy, dx))
 
-    h_img, w_img = img.shape[:2]
+    h, w = img.shape[:2]
 
     # =========================
-    # 2. 按文字方向旋转
+    # 2. 旋转图像
     # =========================
-    M = cv2.getRotationMatrix2D((cx, cy), angle, 1.0)
-    rotated = cv2.warpAffine(img, M, (w_img, h_img))
+    M = cv2.getRotationMatrix2D(tuple(center), angle, 1.0)
+    rotated = cv2.warpAffine(
+        img, M, (w, h),
+        flags=cv2.INTER_LINEAR,
+        borderMode=border_mode
+    )
+
+    # =========================
+    # 3. 同步旋转 points
+    # =========================
+    ones = np.ones((len(points), 1), dtype=np.float32)
+    pts_h = np.hstack([points, ones])          # Nx3
+    rot_pts = pts_h @ M.T                      # Nx2
+
+    # =========================
+    # 4. 用“旋转后的点”裁 ROI
+    # =========================
+    pad_x = box_max_size * pad_x_ratio
+    pad_y = box_max_size * pad_y_ratio
+
+    x1 = int(np.min(rot_pts[:, 0]) - pad_x)
+    x2 = int(np.max(rot_pts[:, 0]) + pad_x)
+
+    y_center = np.mean(rot_pts[:, 1])
+    y1 = int(y_center - pad_y)
+    y2 = int(y_center + pad_y)
+
+    # clamp
+    x1 = max(0, x1); y1 = max(0, y1)
+    x2 = min(w, x2); y2 = min(h, y2)
+
+    if x2 <= x1 or y2 <= y1:
+        return None, angle
+
+    roi = rotated[y1:y2, x1:x2]
+
     dbg("rotated", rotated)
 
     # =========================
-    # 3. 裁剪 ROI
+    # 5. 可选：180° 翻正
     # =========================
-    avg_w = box_max_size * 1.5  # 可后续用真实文字高度替换
-    avg_h = box_max_size / 1.2  # 可后续用真实文字高度替换
-
-    x1 = int(np.min(points[:, 0]) - avg_w)
-    x2 = int(np.max(points[:, 0]) + avg_w)
-
-    y_center = np.mean(points[:, 1])
-    y1 = int(y_center - avg_h)
-    y2 = int(y_center + avg_h)
-
-    roi = rotated[y1:y2, x1:x2]
-    dbg("roi_before_fix", roi)
-
-    # =========================
-    # 4. ⭐ 核心新增逻辑：判断是否需要 180° 翻转
-    # =========================
-    if y_center < h_img / 2.5:
-        # 位于图片偏上 → 翻转 180°
+    if y_center < h * 0.35:
         roi = cv2.rotate(roi, cv2.ROTATE_180)
         angle = (angle + 180) % 360
-        dbg("roi_after_180", roi)
+
+    dbg("roi_before_fix", roi)
 
     return roi, angle
+
 
 
 # =========================
@@ -213,15 +248,15 @@ def detect_and_crop(img, box_max_size=40):
     group = ransac_linear_cluster_numpy(img, centers, box_max_size, min_count=5, line_tol_px=4, max_trials=500)
     if group is None:
         raise RuntimeError("未检测到连续字符集合")
-    roi, angle = rotate_and_crop_roi(img, group, box_max_size)
+    roi, angle = rotate_and_crop_roi_stable(img, group, box_max_size)
     return roi, angle
 
 # =========================
 # 运行示例
 # =========================
-if __name__ == "__main__":
-    img = cv2.imread("ocr_mark10.png")
-    roi, angle = detect_and_crop(img)
-    print("旋转角度:", angle)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+# if __name__ == "__main__":
+#     img = cv2.imread("ocr_mark11.png")
+#     roi, angle = detect_and_crop(img)
+#     print("旋转角度:", angle)
+#     cv2.waitKey(0)
+#     cv2.destroyAllWindows()
