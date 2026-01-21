@@ -141,7 +141,7 @@ def rotate_and_crop_roi(img, points):
     # =========================
     # 3. 裁剪 ROI
     # =========================
-    avg_w = 95  # 可后续用真实文字高度替换
+    avg_w = 100  # 可后续用真实文字高度替换
     avg_h = 50  # 可后续用真实文字高度替换
 
     x1 = int(np.min(points[:, 0]) - avg_w)
@@ -157,8 +157,6 @@ def rotate_and_crop_roi(img, points):
     # =========================
     # 4. ⭐ 核心新增逻辑：判断是否需要 180° 翻转
     # =========================
-    print(y_center,'-------y_center')
-    print(h_img / 2.5,'-------h_img')
     if y_center < h_img / 2.5:
         # 位于图片偏上 → 翻转 180°
         roi = cv2.rotate(roi, cv2.ROTATE_180)
@@ -193,7 +191,7 @@ def detect_and_crop(img):
 # 运行示例
 # =========================
 if __name__ == "__main__":
-    img = cv2.imread("ocr_mark8.png")
+    img = cv2.imread("ocr_mark9.png")
     roi, angle = detect_and_crop(img)
     print("旋转角度:", angle)
     cv2.waitKey(0)

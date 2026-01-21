@@ -15,8 +15,7 @@ def easyocr_digits_only(img):
 
     digits = []
     for _, text, conf in results:
-        print(conf,'-----1')
-        if conf > 0.4:
+        if conf > 0.8:
             digits.append(text)
 
     return digits
