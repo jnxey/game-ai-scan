@@ -100,7 +100,7 @@ async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
         detections = format_chip_detections(results)
         if scan_text == 'yes':
             for det in detections:
-                chip_img = process_chip_image(img, det['bbox'], pad_ratio_w=0.1, pad_ratio_h=0.1, pad_bottom=False)
+                chip_img = process_chip_image(img, det['bbox'], pad_ratio_w=0, pad_ratio_h=0, pad_bottom=False)
                 # cv2.imshow('chip_img', chip_img)
                 # cv2.waitKey(0)
                 roi, angle = detect_and_crop(chip_img)
