@@ -2,6 +2,9 @@ import easyocr
 import cv2
 import numpy as np
 from PIL import Image
+import time
+
+# source easyocr_env/bin/activate
 
 # 初始化 OCR（建议全局只初始化一次）
 reader = easyocr.Reader(['en'], gpu=True, verbose=False)
@@ -80,8 +83,23 @@ def preprocess_for_ocr(roi):
                           cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return th
 
+# =========================
+# 预处理：灰度 + 二值
+# =========================
+def preprocess(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    bin_img = cv2.adaptiveThreshold(
+        gray, 255,
+        cv2.ADAPTIVE_THRESH_MEAN_C,
+        cv2.THRESH_BINARY_INV,
+        31, 5
+    )
+#     cv2.imshow("TTT", bin_img)
+#     cv2.waitKey(0)
+    return bin_img
+
 def easyocr_digits_only(img):
-    results = reader.readtext(img, detail=1, paragraph=False)
+    results = reader.readtext(img, detail=1, paragraph=False, allowlist='0123456789')
     digits = []
     for _, text, conf in results:
         if conf > 0.8 and len(text) == 6:
@@ -91,6 +109,8 @@ def easyocr_digits_only(img):
         return None
     return digits[0]
 
-# img = cv2.imread("easy_ocr3.png")
-# result = easyocr_digits_only(img)
+# img = cv2.imread("easy_ocr5.png")
+# t1 = time.time()
+# result = easyocr_digits_only(preprocess(img))
+# print("OCR耗时:", time.time() - t1)
 # print("最终结果：", result)

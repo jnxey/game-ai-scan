@@ -254,9 +254,9 @@ def detect_and_crop(img, box_max_size=40):
 # =========================
 # 运行示例
 # =========================
-# if __name__ == "__main__":
-#     img = cv2.imread("ocr_mark11.png")
-#     roi, angle = detect_and_crop(img)
-#     print("旋转角度:", angle)
-#     cv2.waitKey(0)
-#     cv2.destroyAllWindows()
+if __name__ == "__main__":
+    img = cv2.imread("ocr_mark11.png")
+    roi, angle = detect_and_crop(img)
+    print("旋转角度:", angle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
