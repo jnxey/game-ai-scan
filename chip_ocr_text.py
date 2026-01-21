@@ -141,8 +141,8 @@ def rotate_and_crop_roi(img, points, box_max_size):
     # =========================
     # 3. 裁剪 ROI
     # =========================
-    avg_w = box_max_size  # 可后续用真实文字高度替换
-    avg_h = box_max_size / 2  # 可后续用真实文字高度替换
+    avg_w = box_max_size * 1.5  # 可后续用真实文字高度替换
+    avg_h = box_max_size / 1.5  # 可后续用真实文字高度替换
 
     x1 = int(np.min(points[:, 0]) - avg_w)
     x2 = int(np.max(points[:, 0]) + avg_w)
@@ -169,7 +169,7 @@ def rotate_and_crop_roi(img, points, box_max_size):
 # =========================
 # 总入口 大小均指640下的大小
 # =========================
-def detect_and_crop(img, box_max_size=100):
+def detect_and_crop(img, box_max_size=80):
     img, scale = resize_to_width(img, 640)
     bin_img = preprocess(img)
 
@@ -183,16 +183,15 @@ def detect_and_crop(img, box_max_size=100):
     group = ransac_linear_cluster_numpy(img, centers)
     if group is None:
         raise RuntimeError("未检测到连续字符集合")
-
     roi, angle = rotate_and_crop_roi(img, group, box_max_size)
     return roi, angle
 
 # =========================
 # 运行示例
 # =========================
-if __name__ == "__main__":
-    img = cv2.imread("ocr_mark9.png")
-    roi, angle = detect_and_crop(img)
-    print("旋转角度:", angle)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+# if __name__ == "__main__":
+#     img = cv2.imread("ocr_mark9.png")
+#     roi, angle = detect_and_crop(img)
+#     print("旋转角度:", angle)
+#     cv2.waitKey(0)
+#     cv2.destroyAllWindows()

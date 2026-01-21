@@ -8,6 +8,8 @@ import time
 import io
 from card_matcher import format_poker_detections, format_majiang_detections, format_chip_detections
 from chip_matcher import process_image, recognize_chip, ensure_cv2_image
+from chip_ocr_text import detect_and_crop
+from chip_ocr_easy import easyocr_digits_only, preprocess_for_ocr
 import requests
 import asyncio
 import httpx
@@ -91,16 +93,25 @@ async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
         # YOLO 可以直接传入 PIL Image 或 numpy array
         results = chipModel.predict(source=img, data='data.yaml', conf=0.7, device=0, save=False, show=False)  # 可调参数
         t2 = time.time()
-        print("YOLO耗时:", t2 - t1)
+        if scan_text == 'yes':
+            print("YOLO耗时:", t2 - t1)
         # 解析结果
         detections = format_chip_detections(results)
         if scan_text == 'yes':
             for det in detections:
                 chip_img = process_image(ensure_cv2_image(img), det['bbox'])
-                view = recognize_chip(chip_img)
-                det['view'] = view
+                # view = recognize_chip(chip_img)
+                roi, angle = detect_and_crop(chip_img)
+                if roi is None or roi.size == 0:
+                    print("⚠️ ROI 为空，无法进行 OCR")
+                else:
+                    code = easyocr_digits_only(preprocess_for_ocr(roi))
+                    if code is not None:
+                        det['view'] = {"code": code, "angle": angle}
+
         t3 = time.time()
-        print("OCR耗时:", t3 - t2)
+        if scan_text == 'yes':
+            print("OCR耗时:", t3 - t2)
         return {"code": 1, "data": detections, "msg": "ok"}
 
     except Exception as e:
