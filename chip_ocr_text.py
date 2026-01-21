@@ -39,12 +39,12 @@ def preprocess(img):
 # =========================
 # 找文字块
 # =========================
-def find_text_blocks(bin_img):
+def find_text_blocks(bin_img, box_max_size):
     contours, _ = cv2.findContours(bin_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     candidates = []
     for c in contours:
         x, y, w, h = cv2.boundingRect(c)
-        if 10 <= w <= 150 and 10 <= h <= 150:
+        if 10 <= w <= box_max_size and 10 <= h <= box_max_size:
             candidates.append((x, y, w, h))
     return candidates
 
@@ -116,7 +116,7 @@ def filter_points_by_distance(points, min_dist=45, max_dist=135):
 # =========================
 # 旋转裁切 ROI
 # =========================
-def rotate_and_crop_roi(img, points):
+def rotate_and_crop_roi(img, points, box_max_size):
     if len(points) < 2:
         return None, 0
 
@@ -141,8 +141,8 @@ def rotate_and_crop_roi(img, points):
     # =========================
     # 3. 裁剪 ROI
     # =========================
-    avg_w = 100  # 可后续用真实文字高度替换
-    avg_h = 50  # 可后续用真实文字高度替换
+    avg_w = box_max_size  # 可后续用真实文字高度替换
+    avg_h = box_max_size / 2  # 可后续用真实文字高度替换
 
     x1 = int(np.min(points[:, 0]) - avg_w)
     x2 = int(np.max(points[:, 0]) + avg_w)
@@ -167,13 +167,13 @@ def rotate_and_crop_roi(img, points):
 
 
 # =========================
-# 总入口
+# 总入口 大小均指640下的大小
 # =========================
-def detect_and_crop(img):
+def detect_and_crop(img, box_max_size=100):
     img, scale = resize_to_width(img, 640)
     bin_img = preprocess(img)
 
-    blocks = find_text_blocks(bin_img)
+    blocks = find_text_blocks(bin_img, box_max_size)
     dbg_img = img.copy()
     for x, y, w, h in blocks:
         cv2.rectangle(dbg_img, (x, y), (x + w, y + h), (0,255,0), 1)
@@ -184,7 +184,7 @@ def detect_and_crop(img):
     if group is None:
         raise RuntimeError("未检测到连续字符集合")
 
-    roi, angle = rotate_and_crop_roi(img, group)
+    roi, angle = rotate_and_crop_roi(img, group, box_max_size)
     return roi, angle
 
 # =========================
