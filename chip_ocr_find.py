@@ -20,7 +20,6 @@ def resize_to_width(img, target_w=640):
 def crop_text_no_finder_debug(img):
     # 0. 统一尺寸
     img, scale = resize_to_width(img, 640)
-    debug_img = img.copy()
 
     # =============================
     # 1. 灰度
@@ -59,8 +58,6 @@ def crop_text_no_finder_debug(img):
     # =============================
     finders = []
     candidate_img = img.copy()
-    min_area = 60  # 最小面积阈值
-    max_area = 140 # 最大面积阈值
 
     for i, c in enumerate(contours):
         x, y, w, h = cv2.boundingRect(c)
