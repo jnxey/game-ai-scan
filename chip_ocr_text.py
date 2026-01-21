@@ -119,26 +119,51 @@ def filter_points_by_distance(points, min_dist=45, max_dist=135):
 def rotate_and_crop_roi(img, points):
     if len(points) < 2:
         return None, 0
-    cx = np.mean(points[:,0])
-    cy = np.mean(points[:,1])
+
+    # =========================
+    # 1. 计算中心 & 角度
+    # =========================
+    cx = np.mean(points[:, 0])
+    cy = np.mean(points[:, 1])
 
     dx, dy = points[-1] - points[0]
     angle = math.degrees(math.atan2(dy, dx))
 
     h_img, w_img = img.shape[:2]
+
+    # =========================
+    # 2. 按文字方向旋转
+    # =========================
     M = cv2.getRotationMatrix2D((cx, cy), angle, 1.0)
     rotated = cv2.warpAffine(img, M, (w_img, h_img))
     dbg("rotated", rotated)
 
-    avg_h = np.mean([10 if h<10 else h for h in [50]*len(points)])  # 可以改成文字高度
-    x1 = int(np.min(points[:,0]) - avg_h)
-    x2 = int(np.max(points[:,0]) + avg_h)
-    y_center = np.mean(points[:,1])
+    # =========================
+    # 3. 裁剪 ROI
+    # =========================
+    avg_h = 50  # 可后续用真实文字高度替换
+
+    x1 = int(np.min(points[:, 0]) - avg_h)
+    x2 = int(np.max(points[:, 0]) + avg_h)
+
+    y_center = np.mean(points[:, 1])
     y1 = int(y_center - avg_h)
     y2 = int(y_center + avg_h)
+
     roi = rotated[y1:y2, x1:x2]
-    dbg("roi", roi)
+    dbg("roi_before_fix", roi)
+
+    # =========================
+    # 4. ⭐ 核心新增逻辑：判断是否需要 180° 翻转
+    # =========================
+    if cy < h_img / 2:
+        # 位于图片偏上 → 翻转 180°
+        roi = cv2.rotate(roi, cv2.ROTATE_180)
+        angle = (angle + 180) % 360
+        dbg("roi_after_180", roi)
+
     return roi, angle
+
 
 # =========================
 # 总入口
@@ -165,7 +190,7 @@ def detect_and_crop(img):
 # 运行示例
 # =========================
 if __name__ == "__main__":
-    img = cv2.imread("ocr_mark1.png")
+    img = cv2.imread("ocr_mark4.png")
     roi, angle = detect_and_crop(img)
     print("旋转角度:", angle)
     cv2.waitKey(0)
