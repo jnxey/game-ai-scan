@@ -59,7 +59,7 @@ def crop_chip_roi(img, x1, y1, x2, y2, pad_ratio_w=0.15, pad_ratio_h=0.15, pad_b
 # =========================
 # 主处理函数
 # =========================
-def process_chip_image(img, bbox, pad_ratio_w=0, pad_ratio_h=0, pad_bottom=False):
+def process_chip_image(img, bbox, pad_ratio_w, pad_ratio_h, pad_bottom=False):
     """
     img: PIL.Image 或 ndarray
     bbox: dict {"x1":.., "y1":.., "x2":.., "y2":..}
@@ -81,25 +81,29 @@ def preprocess_for_ocr(roi):
     gray = cv2.GaussianBlur(gray, (3, 3), 0)
     _, th = cv2.threshold(gray, 0, 255,
                           cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    return th
+    resized = normalize_roi(th)
+    return resized
 
 # =========================
-# 预处理：灰度 + 二值
+# 统一宽度
 # =========================
-def preprocess(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    bin_img = cv2.adaptiveThreshold(
-        gray, 255,
-        cv2.ADAPTIVE_THRESH_MEAN_C,
-        cv2.THRESH_BINARY_INV,
-        31, 5
-    )
-#     cv2.imshow("TTT", bin_img)
-#     cv2.waitKey(0)
-    return bin_img
+def normalize_roi(gray, target_h=62, max_w=256):
+    h, w = gray.shape
+    # 等比例缩放到目标高度
+    scale = target_h / h
+    new_w = int(w * scale)
+    # 限制最大宽度（关键）
+    if new_w > max_w:
+        new_w = max_w
+    resized = cv2.resize(gray, (new_w, target_h))
+    # cv2.imshow("TTT", resized)
+    # cv2.waitKey(0)
+    return resized
 
 def easyocr_digits_only(img):
+    t1 = time.time()
     results = reader.readtext(img, detail=1, paragraph=False, allowlist='0123456789')
+    print("Reader耗时:", time.time() - t1)
     digits = []
     for _, text, conf in results:
         if conf > 0.8 and len(text) == 6:
@@ -111,6 +115,6 @@ def easyocr_digits_only(img):
 
 # img = cv2.imread("easy_ocr5.png")
 # t1 = time.time()
-# result = easyocr_digits_only(preprocess(img))
+# result = easyocr_digits_only(img)
 # print("OCR耗时:", time.time() - t1)
 # print("最终结果：", result)
