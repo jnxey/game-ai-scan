@@ -102,7 +102,7 @@ def preprocess_for_ocr(roi):
 # =========================
 # 统一宽度
 # =========================
-def normalize_roi(gray, target_h=62, max_w=256):
+def normalize_roi(gray, target_h=48, max_w=150):
     h, w = gray.shape
     # 等比例缩放到目标高度
     scale = target_h / h
@@ -117,7 +117,7 @@ def normalize_roi(gray, target_h=62, max_w=256):
 
 def easyocr_digits_only(img):
     t1 = time.time()
-    results = reader.readtext(img, detail=1, paragraph=False, allowlist='0123456789')
+    results = reader.readtext(img, detail=1, paragraph=False)
     print("Reader耗时:", time.time() - t1)
     digits = []
     for _, text, conf in results:
