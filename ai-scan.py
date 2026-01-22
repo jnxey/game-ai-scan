@@ -98,24 +98,25 @@ async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
             print("YOLO耗时:", t2 - t1)
         # 解析结果
         detections = format_chip_detections(results)
-        if scan_text == 'yes':
-            for det in detections:
-                chip_img = process_chip_image(img, det['bbox'], pad_ratio_w=0, pad_ratio_h=0, pad_bottom=False)
-                # cv2.imshow('chip_img', chip_img)
-                # cv2.waitKey(0)
-                roi, angle = detect_and_crop(chip_img)
-                if roi is None or roi.size == 0:
-                    print("⚠️ ROI 为空，无法进行 OCR")
-                else:
-                    code = easyocr_digits_only(preprocess_for_ocr(roi))
-                    if code is not None:
-                        det['view'] = {"code": code, "angle": angle}
-
-        t3 = time.time()
-        if scan_text == 'yes':
-            print("OCR耗时:", t3 - t2)
+        try:
+            if scan_text == 'yes':
+                for det in detections:
+                    chip_img = process_chip_image(img, det['bbox'], pad_ratio_w=0, pad_ratio_h=0, pad_bottom=False)
+                    # cv2.imshow('chip_img', chip_img)
+                    # cv2.waitKey(0)
+                    roi, angle = detect_and_crop(chip_img)
+                    if roi is None or roi.size == 0:
+                        print("⚠️ ROI 为空，无法进行 OCR")
+                    else:
+                        code = easyocr_digits_only(preprocess_for_ocr(roi))
+                        if code is not None:
+                            det['view'] = {"code": code, "angle": angle}
+            t3 = time.time()
+            if scan_text == 'yes':
+                print("OCR耗时:", t3 - t2)
+        except Exception as e:
+            print(e)
         return {"code": 1, "data": detections, "msg": "ok"}
-
     except Exception as e:
         print(e)
         return {"code": 0, "msg": "推理异常"}
