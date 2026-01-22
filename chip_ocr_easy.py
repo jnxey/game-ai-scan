@@ -57,6 +57,21 @@ def crop_chip_roi(img, x1, y1, x2, y2, pad_ratio_w=0.15, pad_ratio_h=0.15, pad_b
     return roi
 
 # =========================
+# 预处理：灰度 + 二值
+# =========================
+def preprocess(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    bin_img = cv2.adaptiveThreshold(
+        gray, 255,
+        cv2.ADAPTIVE_THRESH_MEAN_C,
+        cv2.THRESH_BINARY_INV,
+        31, 5
+    )
+    cv2.imshow("TTT", bin_img)
+    cv2.waitKey(0)
+    return bin_img
+
+# =========================
 # 主处理函数
 # =========================
 def process_chip_image(img, bbox, pad_ratio_w, pad_ratio_h, pad_bottom=False):
@@ -106,15 +121,17 @@ def easyocr_digits_only(img):
     print("Reader耗时:", time.time() - t1)
     digits = []
     for _, text, conf in results:
-        if conf > 0.8 and len(text) == 6:
+        # print(text,'------------------text')
+        # print(conf,'------------------conf')
+        if conf > 0.7 and len(text) == 6:
             digits.append(text)
     if not digits:
         print("⚠️ EasyOCR 未识别到数字")
         return None
     return digits[0]
 
-# img = cv2.imread("easy_ocr5.png")
+# img = cv2.imread("easy_ocr4.png")
 # t1 = time.time()
-# result = easyocr_digits_only(img)
+# result = easyocr_digits_only(preprocess(img))
 # print("OCR耗时:", time.time() - t1)
 # print("最终结果：", result)

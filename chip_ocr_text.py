@@ -260,7 +260,7 @@ def detect_and_crop(img, box_max_size=40):
 # 运行示例
 # =========================
 # if __name__ == "__main__":
-#     img = cv2.imread("easy_ocr4.png")
+#     img = cv2.imread("ocr_mark1.png")
 #     roi, angle = detect_and_crop(img)
 #     print("旋转角度:", angle)
 #     cv2.waitKey(0)
