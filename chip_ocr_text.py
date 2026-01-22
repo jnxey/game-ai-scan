@@ -2,13 +2,19 @@ import cv2
 import numpy as np
 import random
 import math
+import time
 
 DEBUG = False
+DEBUG_PR = True
 
 def dbg(name, img, wait=0):
     if DEBUG:
         cv2.imshow(name, img)
         cv2.waitKey(wait)
+
+def dpr(name, value):
+    if DEBUG_PR:
+        print(name, value)
 
 # =========================
 # 统一宽度
@@ -89,14 +95,15 @@ def ransac_linear_cluster_numpy(img, centers, box_max_size, min_count, line_tol_
     group_filtered = find_compact_x_cluster(best_group, box_max_size * 2.5)
 
     # debug 可视化
-    dbg_img = img.copy()
-    for pt in centers:
-        cv2.circle(dbg_img, (int(pt[0]), int(pt[1])), 3, (0,255,0), -1)
-    for pt in group_filtered:
-        cv2.circle(dbg_img, (int(pt[0]), int(pt[1])), 5, (0,0,255), -1)
-    if len(group_filtered) >= 2:
-        cv2.line(dbg_img, tuple(group_filtered[0].astype(int)), tuple(group_filtered[-1].astype(int)), (255,0,0), 1)
-    dbg("ransac_cluster", dbg_img)
+    if DEBUG:
+        dbg_img = img.copy()
+        for pt in centers:
+            cv2.circle(dbg_img, (int(pt[0]), int(pt[1])), 3, (0,255,0), -1)
+        for pt in group_filtered:
+            cv2.circle(dbg_img, (int(pt[0]), int(pt[1])), 5, (0,0,255), -1)
+        if len(group_filtered) >= 2:
+            cv2.line(dbg_img, tuple(group_filtered[0].astype(int)), tuple(group_filtered[-1].astype(int)), (255,0,0), 1)
+        dbg("ransac_cluster", dbg_img)
 
     return group_filtered
 
@@ -240,20 +247,32 @@ def rotate_and_crop_roi_image_center(
 # 总入口 大小均指640下的大小
 # =========================
 def detect_and_crop(img, box_max_size=40):
+    dpr("--------------------time-------------------------", 0)
+    t1 = time.time()
     img, scale = resize_to_width(img, 640)
     bin_img = preprocess(img)
-
+    t2 = time.time()
+    dpr("灰度耗时:", t2 - t1)
     blocks = find_text_blocks(bin_img, box_max_size)
-    dbg_img = img.copy()
-    for x, y, w, h in blocks:
-        cv2.rectangle(dbg_img, (x, y), (x + w, y + h), (0,255,0), 1)
-    dbg("blocks", dbg_img)
-
+    t3 = time.time()
+    dpr("查找块耗时:", t3 - t2)
+    if DEBUG:
+        dbg_img = img.copy()
+        for x, y, w, h in blocks:
+            cv2.rectangle(dbg_img, (x, y), (x + w, y + h), (0,255,0), 1)
+        dbg("blocks", dbg_img)
+    t4 = time.time()
+    dpr("debug耗时:", t4 - t3)
     centers = [(x+w/2, y+h/2) for x,y,w,h in blocks]
-    group = ransac_linear_cluster_numpy(img, centers, box_max_size, min_count=5, line_tol_px=4, max_trials=500)
+    group = ransac_linear_cluster_numpy(img, centers, box_max_size, min_count=5, line_tol_px=4, max_trials=100)
+    t5 = time.time()
+    dpr("group耗时:", t5 - t4)
     if group is None:
         raise RuntimeError("未检测到连续字符集合")
     roi, angle = rotate_and_crop_roi_image_center(img, group, box_max_size)
+    t6 = time.time()
+    dpr("裁切耗时:", t6 - t5)
+    dpr("总耗时:", t6 - t1)
     return roi, angle
 
 # =========================
