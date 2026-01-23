@@ -9,7 +9,7 @@ import io
 from card_matcher import format_poker_detections, format_majiang_detections, format_chip_detections
 from chip_matcher import process_image, recognize_chip
 from chip_ocr_text import detect_and_crop
-from chip_ocr_easy import easyocr_digits_only, preprocess_for_ocr, process_chip_image
+from chip_ocr_easy import easyocr_digits_only, preprocess_for_ocr, process_chip_image, dummy_prev
 import requests
 import asyncio
 import httpx

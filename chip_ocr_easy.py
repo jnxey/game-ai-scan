@@ -9,6 +9,14 @@ import time
 # 初始化 OCR（建议全局只初始化一次）
 reader = easyocr.Reader(['en'], gpu=True, verbose=False)
 
+
+# 预热图片
+dummy_img = np.zeros((32, 128), dtype=np.uint8)
+
+# 预热操作
+def dummy_prev():
+    return reader.readtext(dummy_img, detail=0)
+
 # =========================
 # 确保输入为 OpenCV ndarray
 # =========================
