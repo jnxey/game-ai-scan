@@ -16,6 +16,12 @@ import httpx
 import torch
 import cv2
 
+# 固定线程，稳定性能
+torch.set_num_threads(2)
+torch.set_num_interop_threads(1)
+cv2.setNumThreads(2)
+cv2.ocl.setUseOpenCL(False)
+
 PORT = 9981
 
 app = FastAPI()
@@ -34,7 +40,6 @@ chipModel = YOLO('chips-best8m.pt')
 pokerModel("prerun.png", imgsz=416)
 majiangModel("prerun.png", imgsz=416)
 chipModel("prerun.png", imgsz=416)
-
 
 @app.get("/check")
 def check():
@@ -101,6 +106,7 @@ async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
         try:
             if scan_text == 'yes':
                 for det in detections:
+                    time.sleep(0.002) # 休息2ms，给CPU，GPU点时间缓缓
                     chip_img = process_chip_image(img, det['bbox'], pad_ratio_w=0, pad_ratio_h=0, pad_bottom=False)
                     # cv2.imshow('chip_img', chip_img)
                     # cv2.waitKey(0)
