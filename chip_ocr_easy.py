@@ -131,7 +131,7 @@ def easyocr_digits_only(img):
     for _, text, conf in results:
         # print(text,'------------------text')
         # print(conf,'------------------conf')
-        if conf > 0.7 and len(text) == 6:
+        if conf > 0.82 and len(text) == 6:
             digits.append(text)
     if not digits:
         print("⚠️ EasyOCR 未识别到数字")
