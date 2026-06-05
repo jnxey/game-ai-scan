@@ -15,6 +15,7 @@ import asyncio
 import httpx
 import torch
 import cv2
+import os
 
 # 固定线程，稳定性能
 torch.set_num_threads(2)
@@ -23,6 +24,11 @@ cv2.setNumThreads(2)
 cv2.ocl.setUseOpenCL(False)
 
 PORT = 9981
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CERT_DIR = os.path.join(BASE_DIR, "certs")
+SSL_CERTFILE = os.environ.get("HTTPS_CERT", os.path.join(CERT_DIR, "localhost.pem"))
+SSL_KEYFILE = os.environ.get("HTTPS_KEY", os.path.join(CERT_DIR, "localhost-key.pem"))
 
 app = FastAPI()
 
@@ -129,10 +135,20 @@ async def chip_scan(file: UploadFile = File(...), scan_text: str = Form(...), ):
 
 
 if __name__ == "__main__":
+    if not os.path.exists(SSL_CERTFILE) or not os.path.exists(SSL_KEYFILE):
+        raise FileNotFoundError(
+            f"TLS 证书不存在，请将证书放入 ./certs 或通过 HTTPS_CERT / HTTPS_KEY 指定路径:\n"
+            f"  {SSL_CERTFILE}\n"
+            f"  {SSL_KEYFILE}"
+        )
+
+    print(f"服务启动: https://127.0.0.1:{PORT}")
     uvicorn.run(
         app,
         host="0.0.0.0",
         port=PORT,
+        ssl_certfile=SSL_CERTFILE,
+        ssl_keyfile=SSL_KEYFILE,
         workers=1,  # Windows 必须 = 1
         reload=False,  # 一定要关
         log_level="info"
