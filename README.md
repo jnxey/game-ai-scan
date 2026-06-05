@@ -1,3 +1,10 @@
 # game-ai-scan
 
-# pyinstaller .\ai-scan.py --onefile --console
+
+```
+ pip install -r requirements.txt
+```
+
+```
+  pyinstaller .\ai-scan.py --onefile --console
+```
