@@ -1,0 +1,19 @@
+# Web API
+fastapi
+uvicorn
+python-multipart
+
+# Deep learning & vision
+torch
+ultralytics
+opencv-python
+numpy
+Pillow
+
+# OCR & barcode
+easyocr
+zxing
+
+# HTTP clients
+requests
+httpx
