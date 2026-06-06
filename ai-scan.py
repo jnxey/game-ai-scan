@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -6,6 +8,10 @@ import uvicorn
 from ultralytics import YOLO
 import time
 import io
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from custom_cipher import decode
 from card_matcher import format_poker_detections, format_majiang_detections, format_chip_detections
 from chip_matcher import process_image, recognize_chip
 from chip_ocr_text import detect_and_crop
@@ -33,9 +39,38 @@ CERT_DIR = os.path.join(BASE_DIR, "certs")
 SSL_CERTFILE = os.environ.get("HTTPS_CERT", os.path.join(CERT_DIR, "localhost.pem"))
 SSL_KEYFILE = os.environ.get("HTTPS_KEY", os.path.join(CERT_DIR, "localhost-key.pem"))
 
+CHECK_CHAR_HEADER = "x-check-char"
+CHECK_CHAR_KEY = os.environ.get("CHECK_CHAR_KEY", "gv")
+MAX_DATE_DIFF_DAYS = 2
+AUTH_SKIP_PATHS = {"/check", "/demo"}
+
+
+def _verify_check_char(header_value: str | None) -> bool:
+    if not header_value or not header_value.strip():
+        return False
+    try:
+        plain = decode(header_value.strip(), CHECK_CHAR_KEY)
+        client_date = datetime.strptime(plain.strip(), "%Y%m%d").date()
+    except (ValueError, Exception):
+        return False
+    return abs((date.today() - client_date).days) <= MAX_DATE_DIFF_DAYS
+
+
+class CheckCharMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        if request.method == "GET" and request.url.path in AUTH_SKIP_PATHS:
+            return await call_next(request)
+        if not _verify_check_char(request.headers.get(CHECK_CHAR_HEADER)):
+            return JSONResponse(status_code=401, content={"code": 0, "msg": "鉴权失败"})
+        return await call_next(request)
+
+
 app = FastAPI()
 
-# 配置 CORS
+# CheckChar 先注册，CORS 后注册，保证 401 响应仍带 CORS 头
+app.add_middleware(CheckCharMiddleware)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"],
                    allow_headers=["*"], )
 
