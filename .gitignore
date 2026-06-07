@@ -7,5 +7,6 @@ installer/*.exe
 installer/*.yaml
 installer/*.pt
 installer/*.png
+installer/certs
 ai-scan.log
 ai-scan.spec

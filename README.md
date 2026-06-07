@@ -2,14 +2,17 @@
 
 
 ```
- pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ```
- pyinstaller .\ai-scan.py --onefile --console
+pyinstaller .\ai-scan.py --onefile --console --add-data "certs;certs" --add-data "templates;templates" --add-data "poker-best8m.pt;." --add-data "majiang-best8m.pt;." --add-data "chips-best8m.pt;." --add-data "prerun.png;." --add-data "data-chips.yaml;." --add-data "data-majiang.yaml;." --add-data "data-poker.yaml;."
 ```
 
 ```
+[data-majiang.yaml](data-majiang.yaml)
+[data-poker.yaml](data-poker.yaml)
+[data-chips.yaml](data-chips.yaml)
 1. 先卸载错误的 CPU 版 PyTorch
 打开你的 PowerShell，运行：
 bash
