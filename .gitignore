@@ -9,4 +9,4 @@ installer/*.pt
 installer/*.png
 installer/certs
 ai-scan.log
-ai-scan.spec
+easyocr_models/

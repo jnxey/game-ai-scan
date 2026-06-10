@@ -1,13 +1,11 @@
-import easyocr
 import cv2
 import numpy as np
 from PIL import Image
 import time
 
-# source easyocr_env/bin/activate
+from ocr_reader import get_reader
 
-# 初始化 OCR（建议全局只初始化一次）
-reader = easyocr.Reader(['en'], gpu=True, verbose=False)
+reader = get_reader()
 
 
 # 预热图片

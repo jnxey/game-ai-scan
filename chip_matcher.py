@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-import easyocr
 import re
 from PIL import Image
 
-# 初始化 OCR（建议全局只初始化一次）
-reader = easyocr.Reader(['en'], gpu=True, verbose=False)
+from ocr_reader import get_reader
+
+reader = get_reader()
 
 # 合法面值（按你的筹码调整）
 DENOMS = {'1', '5', '10', '25', '50', '100', '200', '500', '1000', '2000', '5000', '10000', '20000', '50000', '100000',

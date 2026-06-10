@@ -5,8 +5,26 @@
 pip install -r requirements.txt
 ```
 
+## 打包 exe
+
+打包前先将 EasyOCR 模型复制到项目目录（约 93MB，首次需在本机运行过一次 OCR 以下载模型）：
+
+```powershell
+mkdir easyocr_models 2>$null
+copy $env:USERPROFILE\.EasyOCR\model\craft_mlt_25k.pth easyocr_models\
+copy $env:USERPROFILE\.EasyOCR\model\english_g2.pth easyocr_models\
 ```
-pyinstaller .\ai-scan.py --onefile --console --add-data "certs;certs" --add-data "templates;templates" --add-data "poker-best8m.pt;." --add-data "majiang-best8m.pt;." --add-data "chips-best8m.pt;." --add-data "prerun.png;." --add-data "data-chips.yaml;." --add-data "data-majiang.yaml;." --add-data "data-poker.yaml;."
+
+使用 spec 文件打包（推荐）：
+
+```
+pyinstaller ai-scan.spec
+```
+
+或手动命令：
+
+```
+pyinstaller .\ai-scan.py --onefile --console --collect-all easyocr --runtime-hook hooks/runtime_ssl.py --add-data "easyocr_models;easyocr_models" --add-data "certs;certs" --add-data "templates;templates" --add-data "poker-best8m.pt;." --add-data "majiang-best8m.pt;." --add-data "chips-best8m.pt;." --add-data "prerun.png;." --add-data "data-chips.yaml;." --add-data "data-majiang.yaml;." --add-data "data-poker.yaml;."
 ```
 
 ```
